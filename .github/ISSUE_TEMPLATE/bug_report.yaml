@@ -1,13 +1,14 @@
-name: 🐛Bug Report
-description: File a bug report here
+name: Bug Report
+description: Create a report to help us improve
 title: "[BUG]: "
 labels: ["bug"]
-assignees: ["AnishDe12020"]
+assignees: ''
+
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to fill out this bug report!!!
+  # - type: markdown
+  #   attributes:
+  #     value: |
+  #       Thanks for taking the time to fill out this bug report!!!
   - type: checkboxes
     id: new-bug
     attributes:
@@ -19,8 +20,27 @@ body:
   - type: textarea
     id: bug-description
     attributes:
-      label: Description of the bug
-      description: Tell us what bug you encountered and what should have happened
+      label: Describe the bug
+      description: |
+        Give a clear and concise description of what the bug is.
+        Point out briefly:
+        - What part of the it affects.
+        - How it affects the program.
+        - Under which apparent conditions it happens.
+    validations:
+      required: true
+  - type: textarea
+    id: behaviour-expected
+    attributes:
+      label: Expected Behaviour
+      description: What should happen?
+    validations:
+      required: true
+  - type: textarea
+    id: behaviour-actual
+    attributes:
+      label: Actual Behaviour
+      description: What really happen? You can repeat with more details what you wrote in the bug description
     validations:
       required: true
   - type: textarea
@@ -28,21 +48,61 @@ body:
     attributes:
       label: Steps To Reproduce
       description: Steps to reproduce the behavior.
-      placeholder: Please write the steps in a list form
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+  - type: upload
+    id: screenshot
+    attributes:
+      label: Screenshots
+      description: Attach a screenshot of the problem, if applicable.
+    validations:
+      required: false
+      accept: .png, .jpg, .jpeg, .gif, .svg, .webp
+  - type: dropdown
+    id: os
+    attributes:
+      label: In which operative system are you running the program?
+      description:
+      multiple: false
+      options:
+        - Linux
+        - BSD
+        - Windows
+        - MacOS
     validations:
       required: true
   - type: dropdown
-    id: versions
+    id: arch
     attributes:
-      label: Which version of the app are you using?
-      description: If this issue is occurring on more than 1 version of the app, select the appropriate versions.
-      multiple: true
+      label: In which architecture are you running the program?
+      description:
+      multiple: false
       options:
-       - 1.0.0
-       - 1.1.0
-       - 1.2.0
-       - 2.0.0
-       - 2.1.0
+        - x86_64
+        - x86
+        - Apple Silicon
+        - ARM64
+        - ARMHF
+        - ARMEL
+        - RISC-V
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Which is the stage of the program?
+      description:
+      multiple: false
+      options:
+        - Alpha
+        - Beta
+        - Gamma
+        - Delta
     validations:
       required: true
 

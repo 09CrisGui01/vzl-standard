@@ -21,8 +21,8 @@ body:
     id: bug-description
     attributes:
       label: Describe the bug
-      description: |
-        Give a clear and concise description of what the bug is.
+      description: Give a clear and concise description of what the bug is.
+      placeholder: |
         Point out briefly:
         - What part of the it affects.
         - How it affects the program.
@@ -105,4 +105,11 @@ body:
         - Delta
     validations:
       required: true
+  - type: input
+    id: release-code
+    attributes:
+      label: Release Code
+      description: Provide the release code, if possible.
+    validations:
+      required: false
 

@@ -1,0 +1,151 @@
+name: PR Checklist Validation
+
+# Enforces the checkboxes defined in .github/PULL_REQUEST_TEMPLATE.md
+# - "Type of Change": at least one box must be checked
+# - "How Has This Been Tested?": at least one box must be checked
+# - "Checklist": every box must be checked
+#
+# Runs on PR open/edit/sync and posts a single, updated comment with results.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  validate-checklist:
+    name: Validate PR checklist
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Validate checklist and comment
+        id: validate
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const body = context.payload.pull_request.body || "";
+
+            // Extract the content of a "## Section Name" block up to the next "## " heading
+            function extractSection(markdown, heading) {
+              const pattern = new RegExp(`##\\s+${heading}[^\\n]*\\n([\\s\\S]*?)(?=\\n##\\s|$)`, "i");
+              const match = markdown.match(pattern);
+              return match ? match[1] : "";
+            }
+
+            // Parse "- [ ] label" / "- [x] label" list items from a block of text
+            function parseCheckboxes(section) {
+              const lines = section.split("\n");
+              const items = [];
+              const checkboxLine = /^\s*-\s*\[( |x|X)\]\s*(.+)$/;
+              for (const line of lines) {
+                const m = line.match(checkboxLine);
+                if (m) {
+                  items.push({
+                    checked: m[1].toLowerCase() === "x",
+                    label: m[2].trim(),
+                  });
+                }
+              }
+              return items;
+            }
+
+            const sections = {
+              "Type of Change": { min: 1, mode: "at-least-one" },
+              "How Has This Been Tested\\?": { min: 1, mode: "at-least-one" },
+              "Checklist": { mode: "all-required" },
+            };
+
+            const results = [];
+            let overallPass = true;
+
+            for (const [heading, rule] of Object.entries(sections)) {
+              const displayName = heading.replace("\\?", "?");
+              const raw = extractSection(body, heading);
+              const items = parseCheckboxes(raw);
+
+              if (items.length === 0) {
+                overallPass = false;
+                results.push({
+                  heading: displayName,
+                  pass: false,
+                  detail: "Section not found or contains no checkboxes. Please use the PR template.",
+                });
+                continue;
+              }
+
+              if (rule.mode === "at-least-one") {
+                const checkedCount = items.filter((i) => i.checked).length;
+                const pass = checkedCount >= rule.min;
+                if (!pass) overallPass = false;
+                results.push({
+                  heading: displayName,
+                  pass,
+                  detail: pass
+                    ? `${checkedCount} of ${items.length} option(s) checked.`
+                    : `No option checked. Please select at least one.`,
+                });
+              } else if (rule.mode === "all-required") {
+                const unchecked = items.filter((i) => !i.checked);
+                const pass = unchecked.length === 0;
+                if (!pass) overallPass = false;
+                results.push({
+                  heading: displayName,
+                  pass,
+                  detail: pass
+                    ? `All ${items.length} item(s) checked.`
+                    : `${unchecked.length} item(s) still unchecked:\n` +
+                      unchecked.map((i) => `  - [ ] ${i.label}`).join("\n"),
+                });
+              }
+            }
+
+            const statusIcon = (pass) => (pass ? "✅" : "❌");
+
+            const commentBody = [
+              `## PR Checklist Validation ${overallPass ? "✅" : "❌"}`,
+              "",
+              ...results.map(
+                (r) => `### ${statusIcon(r.pass)} ${r.heading}\n${r.detail}`
+              ),
+              "",
+              overallPass
+                ? "_All required checklist items are complete. Thanks!_"
+                : "_Please update the PR description to satisfy the items above. This check will re-run automatically on edit._",
+            ].join("\n");
+
+            // Find and update our own prior comment instead of spamming new ones
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+
+            const marker = "## PR Checklist Validation";
+            const existing = comments.find(
+              (c) => c.user.type === "Bot" && c.body.startsWith(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: commentBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: commentBody,
+              });
+            }
+
+            if (!overallPass) {
+              core.setFailed("PR checklist is incomplete. See the PR comment for details.");
+            }

@@ -1,0 +1,88 @@
+name: Security issue (non-sensitive / low-severity)
+description: Report low-severity or already publicly disclosed security issues, such as outdated dependencies. Do NOT use this for undisclosed vulnerabilities.
+title: "[SECURITY] "
+labels: ["security"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > ⚠️ **Before filing this issue:** this template is only for **non-sensitive** security matters — e.g. an outdated dependency with a known public CVE, a low-severity hardening suggestion, or an already publicly disclosed vulnerability that has a public advisory.
+        >
+        > If you are reporting a **new, undisclosed, or exploitable vulnerability**, please **do not** file a public issue. Instead follow the private reporting process in [`SECURITY.md`](../SECURITY.md).
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear and concise description of the issue.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Type of Issue
+      options:
+        - Outdated / vulnerable dependency
+        - Publicly disclosed vulnerability (has a CVE / public advisory)
+        - Low-severity hardening suggestion (e.g. missing security header, weak default config)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: affected-component
+    attributes:
+      label: Affected Component(s) / Version
+      description: e.g. package name + version, file/module, or commit hash
+    validations:
+      required: true
+
+  - type: input
+    id: reference-link
+    attributes:
+      label: Reference / Advisory Link
+      description: Link to the public CVE, GHSA advisory, or dependency changelog, if applicable
+      placeholder: "https://..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Low
+        - Medium
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce (if applicable)
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested Fix
+      description: e.g. bump dependency to version X, apply configuration Y
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information
+    validations:
+      required: false
